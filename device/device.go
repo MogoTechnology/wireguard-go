@@ -322,6 +322,7 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger) *Device {
 	go device.RoutineReadFromTUN()
 	go device.RoutineTUNEventReader()
 
+	device.log.Verbosef("mogo wg device started")
 	return device
 }
 
