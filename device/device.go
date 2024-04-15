@@ -342,8 +342,12 @@ func (device *Device) LoopCheckDevice(closeCallback CloseCallback) {
 			last := conn.LastHeartbeat.Load()
 			fmt.Printf("last:\t%d\nnow:\t%d\n\n", last/1e9, time.Now().UnixNano()/1e9)
 			if last < time.Now().Add(-time.Minute*2).UnixNano() {
+				if closeCallback != nil {
+					closeCallback("timeout")
+				} else {
+					device.log.Errorf("close callback is null")
+				}
 				device.Close()
-				closeCallback("timeout")
 			}
 		}
 		device.peers.RUnlock()
