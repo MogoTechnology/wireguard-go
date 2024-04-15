@@ -9,20 +9,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"golang.zx2c4.com/wireguard/scramble"
 	"net"
 	"net/netip"
 	"runtime"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"syscall"
+	"time"
 
 	"golang.org/x/net/ipv4"
 	"golang.org/x/net/ipv6"
 )
 
 var (
-	_ Bind = (*StdNetBind)(nil)
+	_             Bind = (*StdNetBind)(nil)
+	LastHeartbeat      = atomic.Int64{}
 )
 
 // StdNetBind implements Bind for all platforms. While Windows has its own Bind
@@ -50,6 +52,7 @@ type StdNetBind struct {
 }
 
 func NewStdNetBind() Bind {
+	LastHeartbeat.Store(time.Now().UnixNano())
 	return &StdNetBind{
 		udpAddrPool: sync.Pool{
 			New: func() any {
@@ -264,7 +267,8 @@ func (s *StdNetBind) receiveIP(
 		}
 		numMsgs = 1
 	}
-	scramble.ScrambleMessageRecv(msgs, numMsgs)
+	LastHeartbeat.Store(time.Now().UnixNano())
+	//scramble.ScrambleMessageRecv(msgs, numMsgs)
 	for i := 0; i < numMsgs; i++ {
 		msg := &(*msgs)[i]
 		sizes[i] = msg.N
@@ -417,7 +421,7 @@ func (s *StdNetBind) send(conn *net.UDPConn, pc batchWriter, msgs []ipv6.Message
 		err   error
 		start int
 	)
-	scramble.ScrambleMessageSend(&msgs, len(msgs))
+	//scramble.ScrambleMessageSend(&msgs, len(msgs))
 	if runtime.GOOS == "linux" || runtime.GOOS == "android" {
 		for {
 			n, err = pc.WriteBatch(msgs[start:], 0)

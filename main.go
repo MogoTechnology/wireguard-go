@@ -222,9 +222,11 @@ func main() {
 		return
 	}
 
-	device := device.NewDevice(tdev, conn.NewDefaultBind(), logger, nil)
+	device := device.NewDevice(tdev, conn.NewDefaultBind(), logger, func(msg string) {
+		fmt.Println(msg)
+	})
 
-	logger.Verbosef("Device started")
+	logger.Verbosef("Main Device started")
 
 	errs := make(chan error)
 	term := make(chan os.Signal, 1)
