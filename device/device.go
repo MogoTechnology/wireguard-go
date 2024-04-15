@@ -6,6 +6,7 @@
 package device
 
 import (
+	"fmt"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -336,11 +337,11 @@ func (device *Device) LoopCheckDevice(closeCallback CloseCallback) {
 	for {
 		device.peers.RLock()
 		if len(device.peers.keyMap) == 1 {
-			for _, peer := range device.peers.keyMap {
-				if peer.lastHandshakeNano.Load() < time.Now().Add(-time.Minute*2).UnixNano() {
-					device.Close()
-					closeCallback("timeout")
-				}
+			last := conn.LastHeartbeat.Load()
+			fmt.Printf("last:\t%d\nnow:\t%d\n\n", last/1e9, time.Now().UnixNano()/1e9)
+			if last < time.Now().Add(-time.Minute*2).UnixNano() {
+				device.Close()
+				closeCallback("timeout")
 			}
 		}
 		device.peers.RUnlock()
