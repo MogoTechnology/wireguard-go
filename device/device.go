@@ -281,7 +281,9 @@ func (device *Device) SetPrivateKey(sk NoisePrivateKey) error {
 	return nil
 }
 
-func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger) *Device {
+type CloseCallback func(msg string)
+
+func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, closeCallback CloseCallback) *Device {
 	device := new(Device)
 	device.state.state.Store(uint32(deviceStateDown))
 	device.closed = make(chan struct{})
@@ -322,8 +324,28 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger) *Device {
 	go device.RoutineReadFromTUN()
 	go device.RoutineTUNEventReader()
 
+	if closeCallback != nil {
+		go device.LoopCheckDevice(closeCallback)
+	}
+
 	device.log.Verbosef("mogo wg device started")
 	return device
+}
+
+func (device *Device) LoopCheckDevice(closeCallback CloseCallback) {
+	for {
+		device.peers.RLock()
+		if len(device.peers.keyMap) == 1 {
+			for _, peer := range device.peers.keyMap {
+				if peer.lastHandshakeNano.Load() < time.Now().Add(-time.Minute*2).UnixNano() {
+					device.Close()
+					closeCallback("timeout")
+				}
+			}
+		}
+		device.peers.RUnlock()
+		time.Sleep(time.Second * 5)
+	}
 }
 
 // BatchSize returns the BatchSize for the device as a whole which is the max of
