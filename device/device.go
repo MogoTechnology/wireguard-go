@@ -18,6 +18,8 @@ import (
 	"golang.zx2c4.com/wireguard/tun"
 )
 
+const version = "v0.0.5"
+
 type Device struct {
 	state struct {
 		// state holds the device's state. It is accessed atomically.
@@ -329,7 +331,7 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, closeCallba
 		go device.LoopCheckDevice(closeCallback)
 	}
 
-	device.log.Verbosef("mogo wg device started")
+	device.log.Verbosef("mogo wg device started. (%s)", version)
 	return device
 }
 
