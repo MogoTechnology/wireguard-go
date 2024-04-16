@@ -77,7 +77,6 @@ func (device *Device) ResponseHandshake(peerName string) {
 	if ch, ok := handshakeStatusMap.Load(peerName); ok {
 		select {
 		case ch.(chan struct{}) <- struct{}{}:
-			close(ch.(chan struct{}))
 		default:
 		}
 	}
