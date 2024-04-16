@@ -101,6 +101,8 @@ func (peer *Peer) SendHandshakeInitiation(isRetry bool) error {
 		peer.timers.handshakeAttempts.Store(0)
 	}
 
+	peer.device.StartHandshake(peer.String())
+
 	peer.handshake.mutex.RLock()
 	if time.Since(peer.handshake.lastSentHandshake) < RekeyTimeout {
 		peer.handshake.mutex.RUnlock()

@@ -424,6 +424,8 @@ func (device *Device) RoutineHandshake(id int) {
 			peer.timersSessionDerived()
 			peer.timersHandshakeComplete()
 			peer.SendKeepalive()
+
+			device.ResponseHandshake(peer.String())
 		}
 	skip:
 		device.PutMessageBuffer(elem.buffer)

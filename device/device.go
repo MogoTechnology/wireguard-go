@@ -17,7 +17,7 @@ import (
 	"golang.zx2c4.com/wireguard/tun"
 )
 
-const version = "v0.0.7"
+const version = "v0.0.8"
 
 type Device struct {
 	state struct {
@@ -91,6 +91,7 @@ type Device struct {
 	ipcMutex sync.RWMutex
 	closed   chan struct{}
 	log      *Logger
+	callback StatusCallback
 }
 
 // deviceState represents the state of a Device.
@@ -283,12 +284,6 @@ func (device *Device) SetPrivateKey(sk NoisePrivateKey) error {
 	return nil
 }
 
-type StatusCallback func(status int, msg string)
-
-const (
-	StatusClose int = 4
-)
-
 func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, callback StatusCallback) *Device {
 	device := new(Device)
 	device.state.state.Store(uint32(deviceStateDown))
@@ -296,6 +291,7 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, callback St
 	device.log = logger
 	device.net.bind = bind
 	device.tun.device = tunDevice
+	device.callback = callback
 	mtu, err := device.tun.device.MTU()
 	if err != nil {
 		device.log.Errorf("Trouble determining MTU, assuming default: %v", err)
@@ -331,31 +327,11 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, callback St
 	go device.RoutineTUNEventReader()
 
 	if callback != nil {
-		go device.LoopCheckDevice(callback)
+		go device.LoopCheckDevice()
 	}
 
 	device.log.Verbosef("mogo wg device started. (%s)", version)
 	return device
-}
-
-func (device *Device) LoopCheckDevice(callback StatusCallback) {
-	for {
-		device.peers.RLock()
-		if len(device.peers.keyMap) == 1 {
-			last := conn.LastHeartbeat.Load()
-			device.log.Verbosef("last:\t%d\nnow:\t%d\n\n", last/1e9, time.Now().UnixNano()/1e9)
-			if last < time.Now().Add(-time.Minute*2).UnixNano() {
-				if callback != nil {
-					callback(StatusClose, "timeout")
-				} else {
-					device.log.Errorf("close callback is null")
-				}
-				device.Close()
-			}
-		}
-		device.peers.RUnlock()
-		time.Sleep(time.Second * 5)
-	}
 }
 
 // BatchSize returns the BatchSize for the device as a whole which is the max of
