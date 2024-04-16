@@ -53,7 +53,9 @@ var handshakeStatusMap sync.Map
 func (device *Device) StartHandshake(peerName string) {
 	device.log.Verbosef("start handshake with %s", peerName)
 	ch := make(chan struct{})
-	handshakeStatusMap.Store(peerName, ch)
+	if _, store := handshakeStatusMap.LoadOrStore(peerName, ch); store {
+		return
+	}
 	go func() {
 		select {
 		case <-time.After(5 * time.Second):
@@ -73,6 +75,10 @@ func (device *Device) StartHandshake(peerName string) {
 func (device *Device) ResponseHandshake(peerName string) {
 	device.log.Verbosef("response handshake with %s", peerName)
 	if ch, ok := handshakeStatusMap.Load(peerName); ok {
-		ch.(chan struct{}) <- struct{}{}
+		select {
+		case ch.(chan struct{}) <- struct{}{}:
+			close(ch.(chan struct{}))
+		default:
+		}
 	}
 }
