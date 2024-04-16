@@ -6,7 +6,6 @@
 package device
 
 import (
-	"fmt"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -18,7 +17,7 @@ import (
 	"golang.zx2c4.com/wireguard/tun"
 )
 
-const version = "v0.0.5"
+const version = "v0.0.7"
 
 type Device struct {
 	state struct {
@@ -284,9 +283,13 @@ func (device *Device) SetPrivateKey(sk NoisePrivateKey) error {
 	return nil
 }
 
-type CloseCallback func(msg string)
+type StatusCallback func(status int, msg string)
 
-func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, closeCallback CloseCallback) *Device {
+const (
+	StatusClose int = 4
+)
+
+func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, callback StatusCallback) *Device {
 	device := new(Device)
 	device.state.state.Store(uint32(deviceStateDown))
 	device.closed = make(chan struct{})
@@ -327,23 +330,23 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, closeCallba
 	go device.RoutineReadFromTUN()
 	go device.RoutineTUNEventReader()
 
-	if closeCallback != nil {
-		go device.LoopCheckDevice(closeCallback)
+	if callback != nil {
+		go device.LoopCheckDevice(callback)
 	}
 
 	device.log.Verbosef("mogo wg device started. (%s)", version)
 	return device
 }
 
-func (device *Device) LoopCheckDevice(closeCallback CloseCallback) {
+func (device *Device) LoopCheckDevice(callback StatusCallback) {
 	for {
 		device.peers.RLock()
 		if len(device.peers.keyMap) == 1 {
 			last := conn.LastHeartbeat.Load()
-			fmt.Printf("last:\t%d\nnow:\t%d\n\n", last/1e9, time.Now().UnixNano()/1e9)
+			device.log.Verbosef("last:\t%d\nnow:\t%d\n\n", last/1e9, time.Now().UnixNano()/1e9)
 			if last < time.Now().Add(-time.Minute*2).UnixNano() {
-				if closeCallback != nil {
-					closeCallback("timeout")
+				if callback != nil {
+					callback(StatusClose, "timeout")
 				} else {
 					device.log.Errorf("close callback is null")
 				}
