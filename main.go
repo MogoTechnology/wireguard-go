@@ -106,7 +106,7 @@ func main() {
 		case "silent":
 			return device.LogLevelSilent
 		}
-		return device.LogLevelError
+		return device.LogLevelVerbose
 	}()
 
 	// open TUN device (or use supplied fd)
@@ -222,9 +222,7 @@ func main() {
 		return
 	}
 
-	device := device.NewDevice(tdev, conn.NewDefaultBind(), logger, func(msg string) {
-		fmt.Println(msg)
-	})
+	device := device.NewDevice(tdev, conn.NewDefaultBind(), logger, nil)
 
 	logger.Verbosef("Main Device started")
 
