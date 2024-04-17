@@ -26,13 +26,10 @@ func (device *Device) LoopCheckDevice() {
 		return
 	}
 	for {
-		device.net.RLock()
-		port := device.net.port
-		device.net.RUnlock()
 		device.peers.RLock()
 		peers := device.peers.keyMap
 		device.peers.RUnlock()
-		if len(peers) == 1 && port == 0 {
+		if len(peers) == 1 {
 			last := conn.LastHeartbeat.Load()
 			device.log.Verbosef("last:\t%d\nnow:\t%d\n\n", last/1e9, time.Now().UnixNano()/1e9)
 			if last < time.Now().Add(-time.Minute*2).UnixNano() {

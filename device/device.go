@@ -17,7 +17,7 @@ import (
 	"golang.zx2c4.com/wireguard/tun"
 )
 
-const version = "v0.0.10"
+const version = "v0.0.11"
 
 type Device struct {
 	state struct {
