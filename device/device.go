@@ -294,7 +294,10 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, scrambleStr
 	device.tun.device = tunDevice
 	device.callback = callback
 	if scrambleStr != "" {
-		scramble.SetupKey(scrambleStr)
+		err := scramble.SetupKey(scrambleStr)
+		if err != nil {
+			device.log.Errorf("Failed to set up scramble key: %v", err)
+		}
 	}
 	mtu, err := device.tun.device.MTU()
 	if err != nil {

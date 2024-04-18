@@ -1,6 +1,7 @@
 package scramble
 
 import (
+	"errors"
 	"golang.org/x/net/ipv6"
 	"strings"
 )
@@ -8,11 +9,11 @@ import (
 var key = []byte("")
 var scramble = false
 
-func SetupKey(newKey string) {
+func SetupKey(newKey string) error {
 	// newKey = obfuscate mogo2022
 	scrambleArr := strings.Split(newKey, " ")
 	if len(scrambleArr) != 2 {
-		return
+		return errors.New("invalid scramble key")
 	}
 	scrambleType := scrambleArr[0]
 	scrambleKey := scrambleArr[1]
@@ -22,9 +23,10 @@ func SetupKey(newKey string) {
 		scramble = true
 		key = []byte(scrambleKey)
 	default:
-		scramble = true
-		key = []byte(scrambleKey)
+		return errors.New("invalid scramble key")
 	}
+
+	return nil
 }
 
 func ScrambleMessageRecv(msgs *[]ipv6.Message, numMsgs int) {
