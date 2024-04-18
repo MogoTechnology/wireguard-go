@@ -18,7 +18,7 @@ import (
 	"golang.zx2c4.com/wireguard/tun"
 )
 
-const version = "v0.0.13"
+const version = "v0.0.14"
 
 type Device struct {
 	state struct {
@@ -286,6 +286,8 @@ func (device *Device) SetPrivateKey(sk NoisePrivateKey) error {
 }
 
 func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, scrambleStr string, callback StatusCallback) *Device {
+	logger.Verbosef("scramble str: %q", scrambleStr)
+
 	device := new(Device)
 	device.state.state.Store(uint32(deviceStateDown))
 	device.closed = make(chan struct{})
