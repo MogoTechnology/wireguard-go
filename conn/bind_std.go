@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.zx2c4.com/wireguard/scramble"
 	"net"
 	"net/netip"
 	"runtime"
@@ -268,7 +269,7 @@ func (s *StdNetBind) receiveIP(
 		numMsgs = 1
 	}
 	LastHeartbeat.Store(time.Now().UnixNano())
-	//scramble.ScrambleMessageRecv(msgs, numMsgs)
+	scramble.ScrambleMessageRecv(msgs, numMsgs)
 	for i := 0; i < numMsgs; i++ {
 		msg := &(*msgs)[i]
 		sizes[i] = msg.N
@@ -421,7 +422,7 @@ func (s *StdNetBind) send(conn *net.UDPConn, pc batchWriter, msgs []ipv6.Message
 		err   error
 		start int
 	)
-	//scramble.ScrambleMessageSend(&msgs, len(msgs))
+	scramble.ScrambleMessageSend(&msgs, len(msgs))
 	if runtime.GOOS == "linux" || runtime.GOOS == "android" {
 		for {
 			n, err = pc.WriteBatch(msgs[start:], 0)

@@ -6,6 +6,7 @@
 package device
 
 import (
+	"golang.zx2c4.com/wireguard/scramble"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -17,7 +18,7 @@ import (
 	"golang.zx2c4.com/wireguard/tun"
 )
 
-const version = "v0.0.11"
+const version = "v0.0.12"
 
 type Device struct {
 	state struct {
@@ -284,7 +285,7 @@ func (device *Device) SetPrivateKey(sk NoisePrivateKey) error {
 	return nil
 }
 
-func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, callback StatusCallback) *Device {
+func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, scrambleStr string, callback StatusCallback) *Device {
 	device := new(Device)
 	device.state.state.Store(uint32(deviceStateDown))
 	device.closed = make(chan struct{})
@@ -292,6 +293,9 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, callback St
 	device.net.bind = bind
 	device.tun.device = tunDevice
 	device.callback = callback
+	if scrambleStr != "" {
+		scramble.SetupKey(scrambleStr)
+	}
 	mtu, err := device.tun.device.MTU()
 	if err != nil {
 		device.log.Errorf("Trouble determining MTU, assuming default: %v", err)
