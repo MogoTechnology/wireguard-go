@@ -30,6 +30,9 @@ const (
 	ENV_WG_TUN_FD             = "WG_TUN_FD"
 	ENV_WG_UAPI_FD            = "WG_UAPI_FD"
 	ENV_WG_PROCESS_FOREGROUND = "WG_PROCESS_FOREGROUND"
+
+	ENV_WG_SCRAMBLE_KEY = "WG_SCRAMBLE_KEY"
+	ENV_WG_NODE_ID      = "WG_NODE_ID"
 )
 
 func printUsage() {
@@ -222,9 +225,16 @@ func main() {
 		return
 	}
 
-	device := device.NewDevice(tdev, conn.NewDefaultBind(), logger, "", nil)
+	scrambleStr := os.Getenv(ENV_WG_SCRAMBLE_KEY)
+
+	device := device.NewDevice(tdev, conn.NewDefaultBind(), logger, scrambleStr, nil)
 
 	logger.Verbosef("Main Device started")
+
+	err = SetupAgent(device)
+	if err != nil {
+		logger.Errorf("Failed to set up device: %v", err)
+	}
 
 	errs := make(chan error)
 	term := make(chan os.Signal, 1)
@@ -265,4 +275,25 @@ func main() {
 	device.Close()
 
 	logger.Verbosef("Shutting down")
+}
+
+func SetupAgent(dev *device.Device) error {
+	findNodeID, err := func() (uint, error) {
+		nodeIDStr := os.Getenv(ENV_WG_NODE_ID)
+		if nodeIDStr == "" {
+			return 0, nil
+		}
+
+		nodeID, err := strconv.ParseUint(nodeIDStr, 10, 32)
+		if err != nil {
+			return 0, err
+		}
+
+		return uint(nodeID), nil
+	}()
+	if err != nil || findNodeID == 0 {
+		return err
+	}
+	device.InitAgent(findNodeID, dev)
+	return nil
 }
