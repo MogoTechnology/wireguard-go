@@ -18,7 +18,7 @@ import (
 	"golang.zx2c4.com/wireguard/tun"
 )
 
-const version = "v0.0.12"
+const version = "v0.0.13"
 
 type Device struct {
 	state struct {
@@ -89,10 +89,10 @@ type Device struct {
 		mtu    atomic.Int32
 	}
 
-	ipcMutex sync.RWMutex
-	closed   chan struct{}
-	log      *Logger
-	callback StatusCallback
+	ipcMutex          sync.RWMutex
+	closed            chan struct{}
+	log               *Logger
+	iosClientCallback StatusCallback
 }
 
 // deviceState represents the state of a Device.
@@ -292,8 +292,9 @@ func NewDevice(tunDevice tun.Device, bind conn.Bind, logger *Logger, scrambleStr
 	device.log = logger
 	device.net.bind = bind
 	device.tun.device = tunDevice
-	device.callback = callback
+	device.iosClientCallback = callback
 	if scrambleStr != "" {
+		logger.Verbosef("Setting up scramble key: %q", scrambleStr)
 		err := scramble.SetupKey(scrambleStr)
 		if err != nil {
 			device.log.Errorf("Failed to set up scramble key: %v", err)

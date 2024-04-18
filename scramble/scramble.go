@@ -10,7 +10,6 @@ var key = []byte("")
 var scramble = false
 
 func SetupKey(newKey string) error {
-	// newKey = obfuscate mogo2022
 	scrambleArr := strings.Split(newKey, " ")
 	if len(scrambleArr) != 2 {
 		return errors.New("invalid scramble key")

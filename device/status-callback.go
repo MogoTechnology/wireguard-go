@@ -21,8 +21,8 @@ const (
 )
 
 func (device *Device) LoopCheckDevice() {
-	if device.callback == nil {
-		device.log.Errorf("close callback is null")
+	if device.iosClientCallback == nil {
+		device.log.Errorf("close iosClientCallback is null")
 		return
 	}
 	for {
@@ -33,10 +33,10 @@ func (device *Device) LoopCheckDevice() {
 			last := conn.LastHeartbeat.Load()
 			device.log.Verbosef("last:\t%d\nnow:\t%d\n\n", last/1e9, time.Now().UnixNano()/1e9)
 			if last < time.Now().Add(-time.Minute*2).UnixNano() {
-				if device.callback != nil {
-					device.callback(StatusClose, "timeout")
+				if device.iosClientCallback != nil {
+					device.iosClientCallback(StatusClose, "timeout")
 				} else {
-					device.log.Errorf("close callback is null")
+					device.log.Errorf("close iosClientCallback is null")
 				}
 				device.Close()
 			}
@@ -57,13 +57,13 @@ func (device *Device) StartHandshake(peerName string) {
 		select {
 		case <-time.After(5 * time.Second):
 			device.log.Errorf("handshake timeout")
-			if device.callback != nil {
-				device.callback(StatusHandshakeFailed, "timeout")
+			if device.iosClientCallback != nil {
+				device.iosClientCallback(StatusHandshakeFailed, "timeout")
 			}
 		case <-ch:
 			device.log.Verbosef("handshake success")
-			if device.callback != nil {
-				device.callback(StatusHandshakeSuccess, "handshake success")
+			if device.iosClientCallback != nil {
+				device.iosClientCallback(StatusHandshakeSuccess, "handshake success")
 			}
 		}
 	}()
