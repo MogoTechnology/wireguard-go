@@ -49,15 +49,7 @@ func warning() {
 		return
 	}
 
-	fmt.Fprintln(os.Stderr, "┌──────────────────────────────────────────────────────┐")
-	fmt.Fprintln(os.Stderr, "│                                                      │")
-	fmt.Fprintln(os.Stderr, "│   Running wireguard-go is not required because this  │")
-	fmt.Fprintln(os.Stderr, "│   kernel has first class support for WireGuard. For  │")
-	fmt.Fprintln(os.Stderr, "│   information on installing the kernel module,       │")
-	fmt.Fprintln(os.Stderr, "│   please visit:                                      │")
-	fmt.Fprintln(os.Stderr, "│         https://www.wireguard.com/install/           │")
-	fmt.Fprintln(os.Stderr, "│                                                      │")
-	fmt.Fprintln(os.Stderr, "└──────────────────────────────────────────────────────┘")
+	fmt.Fprintln(os.Stderr, "mogo wg starting...")
 }
 
 func main() {
@@ -231,7 +223,7 @@ func main() {
 
 	logger.Verbosef("Main Device started")
 
-	err = SetupAgent(device)
+	err = SetupAgent(device, logger)
 	if err != nil {
 		logger.Errorf("Failed to set up device: %v", err)
 	}
@@ -277,7 +269,7 @@ func main() {
 	logger.Verbosef("Shutting down")
 }
 
-func SetupAgent(dev *device.Device) error {
+func SetupAgent(dev *device.Device, logger *device.Logger) error {
 	findNodeID, err := func() (uint, error) {
 		nodeIDStr := os.Getenv(ENV_WG_NODE_ID)
 		if nodeIDStr == "" {
@@ -294,6 +286,6 @@ func SetupAgent(dev *device.Device) error {
 	if err != nil || findNodeID == 0 {
 		return err
 	}
-	device.InitAgent(findNodeID, dev)
+	device.InitAgent(findNodeID, dev, logger)
 	return nil
 }

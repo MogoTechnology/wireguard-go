@@ -64,6 +64,10 @@ func (key *NoisePublicKey) FromHex(src string) error {
 	return loadExactHex(key[:], src)
 }
 
+func (key NoisePublicKey) ToHex() string {
+	return hex.EncodeToString(key[:])
+}
+
 func (key NoisePublicKey) IsZero() bool {
 	var zero NoisePublicKey
 	return key.Equals(zero)

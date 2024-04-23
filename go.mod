@@ -12,5 +12,6 @@ require (
 
 require (
 	github.com/google/btree v1.0.1 // indirect
+	github.com/spf13/cast v1.6.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 )

@@ -379,6 +379,7 @@ func (device *Device) RoutineHandshake(id int) {
 			device.log.Verbosef("%v - Received handshake initiation", peer)
 			peer.rxBytes.Add(uint64(len(elem.packet)))
 
+			RequestHandshake(peer)
 			peer.SendHandshakeResponse()
 
 		case MessageResponseType:
