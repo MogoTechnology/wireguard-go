@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -19,6 +20,8 @@ import (
 	"golang.zx2c4.com/wireguard/device"
 	"golang.zx2c4.com/wireguard/ipc"
 	"golang.zx2c4.com/wireguard/tun"
+
+	_ "net/http/pprof"
 )
 
 const (
@@ -249,6 +252,10 @@ func main() {
 	}()
 
 	logger.Verbosef("UAPI listener started")
+
+	go func() {
+		logger.Verbosef(http.ListenAndServe(":16060", nil).Error())
+	}()
 
 	// wait for program to terminate
 
