@@ -184,9 +184,11 @@ func (a *Agent) RemovePeer(pk string) error {
 		return fmt.Errorf("RemovePeer error: %v", err)
 	}
 
-	err = a.ipRange.Release(net.ParseIP(a.peers[pk].allowedIP))
-	if err != nil {
-		return fmt.Errorf("release IP error: %v", err)
+	if a.peers[pk] != nil {
+		err = a.ipRange.Release(net.ParseIP(a.peers[pk].allowedIP))
+		if err != nil {
+			return fmt.Errorf("release IP error: %v", err)
+		}
 	}
 
 	delete(a.peers, pk)
