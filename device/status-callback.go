@@ -20,6 +20,8 @@ const (
 	CallbackMsgCloseTimeout     = "timeout"
 )
 
+var once sync.Once
+
 func (device *Device) LoopCheckDevice() {
 	if device.iosClientCallback == nil {
 		device.log.Errorf("close iosClientCallback is null")
@@ -30,6 +32,11 @@ func (device *Device) LoopCheckDevice() {
 		peers := device.peers.keyMap
 		device.peers.RUnlock()
 		if len(peers) == 1 {
+			once.Do(func() {
+				for _, peer := range peers {
+					_ = peer.SendHandshakeInitiation(false)
+				}
+			})
 			last := conn.LastHeartbeat.Load()
 			device.log.Verbosef("last:\t%d\nnow:\t%d\n\n", last/1e9, time.Now().UnixNano()/1e9)
 			if last < time.Now().Add(-time.Minute*2).UnixNano() {
