@@ -27,10 +27,12 @@ func (device *Device) LoopCheckDevice() {
 		device.log.Errorf("close iosClientCallback is null")
 		return
 	}
+	inited := false
 	for {
 		device.peers.RLock()
 		peers := device.peers.keyMap
 		device.peers.RUnlock()
+		device.log.Verbosef("loop check: peer[%d], inited[%v]", len(peers), inited)
 		if len(peers) == 1 {
 			once.Do(func() {
 				for _, peer := range peers {
@@ -47,8 +49,13 @@ func (device *Device) LoopCheckDevice() {
 				}
 				device.Close()
 			}
+			inited = true
 		}
-		time.Sleep(LoopCheckInterval)
+		if inited {
+			time.Sleep(LoopCheckInterval)
+		} else {
+			time.Sleep(time.Second / 5)
+		}
 	}
 }
 

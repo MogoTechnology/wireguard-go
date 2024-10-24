@@ -301,6 +301,7 @@ func (a *Agent) ClientHttpServer() error {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+		a.log.Verbosef("[api] Resp: %v", resp)
 	})
 
 	mux.HandleFunc("/remove_peer", func(w http.ResponseWriter, r *http.Request) {
