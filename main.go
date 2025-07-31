@@ -36,6 +36,8 @@ const (
 
 	ENV_WG_SCRAMBLE_KEY = "WG_SCRAMBLE_KEY"
 	ENV_WG_NODE_ID      = "WG_NODE_ID"
+	ENV_WG_NODE_IP      = "WG_NODE_IP"
+	ENV_WG_NODE_IP_MASK = "WG_NODE_IP_MASK"
 )
 
 func printUsage() {
@@ -290,9 +292,11 @@ func SetupAgent(dev *device.Device, logger *device.Logger) error {
 
 		return uint(nodeID), nil
 	}()
+	serverIP := os.Getenv(ENV_WG_NODE_IP)
+	serverMask := os.Getenv(ENV_WG_NODE_IP_MASK)
 	if err != nil || findNodeID == 0 {
 		return err
 	}
-	device.InitAgent(findNodeID, dev, logger)
+	device.InitAgent(findNodeID, serverIP, serverMask, dev, logger)
 	return nil
 }

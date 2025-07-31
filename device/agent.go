@@ -21,9 +21,6 @@ const (
 	agentBin                 = "/opt/agent/bin/agent"
 	defaultSockFileDir       = "/opt/agent/run/"
 	defaultLoopCheckInterval = 5 * time.Second
-
-	defaultClientIP     = "10.10.0.0"
-	defaultClientIPMask = "255.255.0.0"
 )
 
 var defaultAgent *Agent
@@ -49,11 +46,11 @@ type AgentPeer struct {
 	createTime   time.Time
 }
 
-func InitAgent(nodeID uint, device *Device, logger *Logger) {
-	defaultAgent = NewAgent(nodeID, device, defaultLoopCheckInterval, logger)
+func InitAgent(nodeID uint, serverIP string, ServerMask string, device *Device, logger *Logger) {
+	defaultAgent = NewAgent(nodeID, serverIP, ServerMask, device, defaultLoopCheckInterval, logger)
 }
 
-func NewAgent(nodeID uint, device *Device, loopCheckInterval time.Duration, logger *Logger) *Agent {
+func NewAgent(nodeID uint, serverIP string, ServerMask string, device *Device, loopCheckInterval time.Duration, logger *Logger) *Agent {
 	agent := &Agent{
 		NodeID:            nodeID,
 		sockFile:          fmt.Sprintf("%swg%d.sock", defaultSockFileDir, nodeID),
@@ -63,8 +60,8 @@ func NewAgent(nodeID uint, device *Device, loopCheckInterval time.Duration, logg
 
 		peers: make(map[string]*AgentPeer),
 		ipRange: utils.NewCIDRRange(&net.IPNet{
-			IP:   net.ParseIP(defaultClientIP),
-			Mask: utils.ParseIPv4Mask(defaultClientIPMask),
+			IP:   net.ParseIP(serverIP),
+			Mask: utils.ParseIPv4Mask(ServerMask),
 		}),
 	}
 
